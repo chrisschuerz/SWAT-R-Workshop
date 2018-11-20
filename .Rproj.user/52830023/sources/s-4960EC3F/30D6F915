@@ -5,14 +5,14 @@
     "dirty" : false,
     "encoding" : "UTF-8",
     "folds" : "",
-    "hash" : "0",
+    "hash" : "2534945387",
     "id" : "30D6F915",
-    "lastKnownWriteTime" : 1542752066,
-    "last_content_update" : 1542752066420,
+    "lastKnownWriteTime" : 1542752109,
+    "last_content_update" : 1542752109490,
     "path" : "~/Documents/projects/SWAT-R-Workshop/Session_2/SWAT_R.Rmd",
     "project_path" : "Session_2/SWAT_R.Rmd",
     "properties" : {
-        "cursorPosition" : "6,20",
+        "cursorPosition" : "7,19",
         "scrollLine" : "0"
     },
     "relative_order" : 1,

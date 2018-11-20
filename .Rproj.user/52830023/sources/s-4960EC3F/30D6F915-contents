@@ -5,7 +5,7 @@ output:
     number_sections: true
     citation_package: natbib
     highlight: tango
-    keep_tex: true
+    keep_tex: false
     fig_caption: true
     latex_engine: pdflatex
     template: svm-latex-ms.tex
