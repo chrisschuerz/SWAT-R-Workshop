@@ -4,7 +4,7 @@ output:
     toc: true
     number_sections: true
     citation_package: natbib
-    highlight: pygments
+    highlight: tango
     keep_tex: true
     fig_caption: true
     latex_engine: pdflatex
