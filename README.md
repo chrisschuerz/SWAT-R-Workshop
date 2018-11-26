@@ -1,6 +1,6 @@
 # Course outline
 
-### Session 1: Basic data analysis in `R` (morning)
+### Session 1: Basic data analysis in *R* (morning)
 
 
 
