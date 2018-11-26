@@ -1,8 +1,8 @@
 # Course outline
 
-### Morning session (Session 1)
+### Session 1: Basic data analysis in `R` (morning)
 
 
 
-### Afternoon session (Session 2)
+### Session 2: SWAT simulation, calibration, and sensitivity analysis in R
 
