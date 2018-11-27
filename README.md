@@ -57,3 +57,20 @@ The console of Rstudio should show something like this on startup:
 #> 'help.start()' for an HTML browser interface to help.
 #> Type 'q()' to quit R.
 ```
+
+The real strenght of *R* is the large number of packages that are easily accesible from CRAN and that provide code solutions to most of the programming and data analysis problems you probably can think of :). To install an *R* package from CRAN you simply execute the function `r install.package("name_of_the_package")`. During this short workshop we require functionality of various different *R* packages. Please copy the following lines of code in to the console of Rstudio (the window that shows: `>`) and press enter to run each line of code.
+
+``` r
+install.packages(c("devtools", "tidyverse", "lhs", "hydroGOF", "sensitivity", "fast")  
+```
+
+#### SWATplusR
+The `SWATplusR` package is hosted in one of my github repositories. As it is still under development I try to avoid to leave it out in the open to be accessible by everybody at the moment. In the future it will be freely accessible of course. For the workshop however, you can install the package by running the following line of code
+
+
+``` r
+devtools::install_github("chrisschuerz/SWATplusR", auth_token = "e10028d297e76e4667342fc4a592baa35e198519")
+```
+
+### Troubleshooting
+Good luck with the installation! If you encounter any problems I recommend to post an issue in the issue section of this github repository: https://github.com/chrisschuerz/SWAT-R-Workshop/issues. Thus, others that encounter the same problems can read if a solution was already posted. This hopefully reduces the number of emails I have to answer.
