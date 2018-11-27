@@ -28,4 +28,9 @@ The goal of the afternoon session is that you get familiar with the `SWATplusR` 
 ## First steps
 ### Installation
 #### base *R*
-In order to execute *R* code you require base R installed on your computer. Please download the latest *R* version from the Comprehensive R Archive Network (CRAN) for your operating system: https://cran.r-project.org/
+In order to execute *R* code you require base R installed on your computer. Please download the latest *R* version from the Comprehensive R Archive Network (CRAN) for your operating system: https://cran.r-project.org/. 
+If you run linux on your computer I recommend an installation via the terminal. For Ubuntu bionic beaver (and maybe other recent debian distributions) this is a helpful link: https://linuxize.com/post/how-to-install-r-on-ubuntu-18-04/
+
+#### Rstudio
+In theory you can write your *R* code in any text editor and execute it in various ways. Probably the most established integrated development environment (IDE) for *R* is Rstudio. It is my preferred IDE to write and execute *R* code. It provides plenty of functionality for *R* package devlopment, manage your *R* projects and much more.
+Please go to this website and install Rstudio for your operating system: https://www.rstudio.com/products/rstudio/download/#download.
