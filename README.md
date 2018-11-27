@@ -27,3 +27,5 @@ The goal of the afternoon session is that you get familiar with the `SWATplusR` 
 
 ## First steps
 ### Installation
+#### base *R*
+In order to execute *R* code you require base R installed on your computer. Please download the latest *R* version from the Comprehensive R Archive Network (CRAN) for your operating system: https://cran.r-project.org/
