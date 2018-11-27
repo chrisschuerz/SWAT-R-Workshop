@@ -14,7 +14,7 @@ The goal of the morning session is to give a short introduction into the basics 
 
 ### Session 2: SWAT simulation, calibration, and sensitivity analysis in *R* 
 ###### (1:00 pm to 4:30pm)
-The goal of the afternoon session is that you get familiar with the `SWATplusR` package. First we will load a demo SWAT project and explore the functionality of the `SWATplusR` package. The essential part of this session will be to learn how to utilize the package functionality and combine it with other *R* packages. In a small case study we will execute the SWAT model with different model parametrizations, extract simulation results, evaluate and visualize the simulation results (using the packages `HydroGOF` and the `tidyverse`), perform a parameter sensitivity analysis (employing packages such as `sensitivity` or `fast`), and perform a first model calibration.
+The goal of the afternoon session is that you get familiar with the `SWATplusR` package. First we will load a demo SWAT project and explore the functionality of the `SWATplusR` package. The essential part of this session will be to learn how to utilize the package functionality and combine it with other *R* packages. In a small case study we will execute the SWAT model with different model parametrizations, extract simulation results, evaluate and visualize the simulation results (using the packages `hydroGOF` and the `tidyverse`), perform a parameter sensitivity analysis (employing packages such as `sensitivity` or `fast`), and perform a first model calibration.
 
 ###### The afternoon in bullets:
 - Getting to know the SWATplusR package
@@ -61,7 +61,7 @@ The console of Rstudio should show something like this on startup:
 The real strenght of *R* is the large number of packages that are easily accesible from CRAN and that provide code solutions to most of the programming and data analysis problems you probably can think of :). To install an *R* package from CRAN you simply execute the function `install.package("name_of_the_package")`. During this short workshop we require functionality of various different *R* packages. Please copy the following lines of code in to the console of Rstudio (the window that shows: `>`) and press enter to run each line of code.
 
 ``` r
-install.packages(c("devtools", "tidyverse", "lhs", "hydroGOF", "sensitivity", "fast")  
+install.packages(c("devtools", "tidyverse", "lhs", "hydroGOF", "sensitivity", "fast"))
 ```
 
 #### SWATplusR
