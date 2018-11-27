@@ -39,21 +39,21 @@ Please go to this website and install Rstudio for your operating system: https:/
 After installing base *R* and Rstudio you should be able to run Rstudio. Rstudio should automatically recognize the *R* version you just installed as your default one. 
 The console of Rstudio should show something like this on startup:
 ``` r
->R version 3.5.1 (2018-07-02) -- "Feather Spray"
->Copyright (C) 2018 The R Foundation for Statistical Computing
->Platform: x86_64-pc-linux-gnu (64-bit)
->
->R is free software and comes with ABSOLUTELY NO WARRANTY.
->You are welcome to redistribute it under certain conditions.
->Type 'license()' or 'licence()' for distribution details.
->
->  Natural language support but running in an English locale
->
->R is a collaborative project with many contributors.
->Type 'contributors()' for more information and
->'citation()' on how to cite R or R packages in publications.
->
->Type 'demo()' for some demos, 'help()' for on-line help, or
->'help.start()' for an HTML browser interface to help.
->Type 'q()' to quit R.
+#> R version 3.5.1 (2018-07-02) -- "Feather Spray"
+#> Copyright (C) 2018 The R Foundation for Statistical Computing
+#> Platform: x86_64-pc-linux-gnu (64-bit)
+#> 
+#> R is free software and comes with ABSOLUTELY NO WARRANTY.
+#> You are welcome to redistribute it under certain conditions.
+#> Type 'license()' or 'licence()' for distribution details.
+#> 
+#>   Natural language support but running in an English locale
+#> 
+#> R is a collaborative project with many contributors.
+#> Type 'contributors()' for more information and
+#> 'citation()' on how to cite R or R packages in publications.
+#> 
+#> Type 'demo()' for some demos, 'help()' for on-line help, or
+#> 'help.start()' for an HTML browser interface to help.
+#> Type 'q()' to quit R.
 ```
