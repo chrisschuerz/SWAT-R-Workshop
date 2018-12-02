@@ -1,0 +1,106 @@
+---
+output: 
+  pdf_document:
+    toc: true
+    number_sections: true
+    citation_package: natbib
+    highlight: tango
+    keep_tex: false
+    fig_caption: true
+    latex_engine: pdflatex
+    template: svm-latex-ms.tex
+title: "Session 1: Introduction to data analysis in R - a practical example "
+author:
+- name: "Christoph Schürz"
+  affiliation: "christoph.schuerz@boku.ac.at"
+abstract: "The goal of the first session is that you get familiar with simple data analysis tasks in *R*. We learn basic tasks such as loading data, working with tables and visualizing analysis results, using Riesel climatic data. "
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+geometry: margin=1in
+fontfamily: mathpazo
+fontsize: 11pt
+# bibliography: ~/Dropbox/master.bib
+biblio-style: apsr
+---
+
+\newpage
+
+# Required packages
+```{r, message=FALSE}
+library(tidyverse)
+library(pasta)
+library(here)
+```
+
+# Data acquisition
+## Loading climatic data directly from a webpage
+I added this section just for the sake of completeness. It is a great example for all the challanges "real" data pose when working with them. Below I provide some ideas about working with "real and messy" data and how we can do better. I think this is important for working with data and it might spare you some hassle in the future. It is not essential to be able to follow every step of this section. You can download the resulting cleaned up dataset from the github repository. We will use that dataset to learn how to load data from your hard drive in the following section.
+
+
+The Riesel climatic data is available from the [ARS webpage](https://www.ars.usda.gov/plains-area/temple-tx/grassland-soil-and-water-research-laboratory/docs/riesel-climatic-data/). In general, there is not much of a difference between a path to a file on your comuter and a URL. Therefore, we can directly load the data from the internet. 
+
+```{r, message=FALSE, eval=FALSE}
+# The URL where the weather files on the ARS webpage are stored
+ars_url <- "https://www.ars.usda.gov/ARSUserFiles/30980000/riesel/climate"
+# A verctor of the names of the weather files
+weather_files <- 2010:2012%&%"hrly.txt"
+
+# Loop over all weather file names, load the files from the web page and
+# merge them to a tibble (data.frame)
+ars_clim <- map_dfr(weather_files, ~read_table(file = url(ars_url%//%.x), 
+                                               guess_max =  10000,
+                                               skip = 3, col_names = F))
+```
+
+```{r, echo=FALSE}
+ars_clim <- readRDS(here("Session_1/ars_clim.rds"))
+```
+
+
+\newpage
+
+
+The header of the tables provided online are (no offense) a bad example of storing data. Therefore I skipped the header line `skip = 3` when loading the data. In order to give the variables good names (one of the hardest tasks in programming) to work with in the following I created a name vector with "good" variable names. We will discuss the naming of variables and I will share some of my ideas to this topic at this point.
+```{r}
+# The variable names we will assign to the variables in the weather data set.
+tbl_header <- c("year",        # yyyy
+                "day",         # jdn
+                "hour",        # (h)hmm
+                "t_air_ave",   # degC
+                "t_air_max",   # degC 
+                "t_air_min",   # degC 
+                "rh_max",      # %
+                "rh_min",      # %
+                "p_vap_ave",   # kPa
+                "sr_tot",      # kJ m^-2
+                "wnd_v_ave",   # m s^-1
+                "wnd_v_max",   # m s^-1
+                "wnd_dir_ave", # deg
+                "pr_tot",      # mm
+                "t_sol_ave",   # degC
+                "t_sol_max",   # degC
+                "t_sol_min"    # degC
+                )
+
+names(ars_clim) <- tbl_header
+
+ars_clim
+```
+
+## Saving data
+There are many ways and data formates to save your data. If I do not intend to use the data with any other software (e.g. Excel) or share the dataset with colleagues, my preferred way to store data is as ***.rds** files (short for R Data Single). The advantage of this format is, that it holds exactly one variable that I can assign to a specific variable name when loading it. This makes code easier to read. 
+
+If the data should be accessible by other software (and the data is a spreadsheet) I suggest to save in the ***.csv** format. This is a format that can be interpreted by a wide range of software (in contrast to ***.xslx** and others). 
+
+Here I show you different ways to save your data. We will briefly talk about the pros and cons of all the methods.
+```{r}
+# Saving as a single data object
+saveRDS(ars_clim, here("Session_1/ars_clim.rds"))
+
+# Saving the data with the default save command
+save(ars_clim, file = here("Session_1/ars_clim.rda"))
+
+# Writing the table in a csv file
+write.csv(ars_clim, file = here("Session_1/ars_clim.csv"))
+
+```
+
