@@ -61,7 +61,11 @@ The console of Rstudio should show something like this on startup:
 The real strength of *R* is the large number of packages that are easily accesible from CRAN and that provide code solutions to most of the programming and data analysis problems you probably can think of :). To install an *R* package from CRAN you simply execute the function `install.package("name_of_the_package")`. During this short workshop we require functionality of various different *R* packages. Please copy the following lines of code in to the console of Rstudio (the window that shows: `>`) and press enter to run each line of code.
 
 ``` r
+# Install required packages from CRAN
 install.packages(c("devtools", "tidyverse", "lubridate", "lhs", "hydroGOF", "sensitivity", "fast", "sf"))
+
+# Install the pasta package from my github repository (I use it a lot and will explain why)
+devtools::install_github("chrisschuerz/pasta")
 ```
 
 Especially installing the `sf` package can cause troubles on Linux, as it requires `gdal` (that maybe comes with QGIS). If you cannot resolve the troubles, please contact me. In general it is not essential to have the `sf` package installed. We might use it at the end of the course to visualize some maps.
