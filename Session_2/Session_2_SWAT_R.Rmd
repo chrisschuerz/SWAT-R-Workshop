@@ -106,7 +106,7 @@ q_obs <- load_demo(dataset = "observation")
 After loading the demo project you can already perform your first SWAT simulation. To run SWAT from *R* you can simply use the functions `run_swat2012()` to run a SWAT2012 project or `run_swatplus()` to run a SWAT+ project. We will go though all the parameters these functions provide. The minimum requirement to run simulations in a project is to provide the path to the project and what simulation output the function should return to *R*. Below is a mimimum example to simulate the discharge at the main outlet.
 
 ```{r, eval=F}
-q_out <- run_swatplus(proj_path, 
+q_out <- run_swatplus(project_path = proj_path, 
                       output = define_output(file = "channel",
                                              variable = "flo_out",
                                              unit = 3))
@@ -136,7 +136,7 @@ par_single <- c("cn2.hru|change = abschg" = -5,
 
 With this parameter set we can again run our model
 ```{r, eval=F}
-q_out <- run_swatplus(proj_path, 
+q_out <- run_swatplus(project_path = proj_path, 
                       output = define_output(file = "channel",
                                              variable = "flo_out",
                                              unit = 3),
@@ -152,7 +152,7 @@ par_set <- tibble("cn2.hru|change = abschg" = runif(8,-15,10),
 To run SWAT simulations with many parameter sets the `SWATplusR` package provides the option to run the simulations in parallel. To perform parallel simulations you simply define the number of threads as demonstrated below.
 
 ```{r, eval=F}
-q_out <- run_swatplus(proj_path, 
+q_out <- run_swatplus(project_path = proj_path, 
                       output = define_output(file = "channel",
                                              variable = "flo_out",
                                              unit = 3),
@@ -160,4 +160,38 @@ q_out <- run_swatplus(proj_path,
                       n_thread = 4)
 ```
 Now instead of only providing a table with the simulations, the function returns by default a list that stores the parameter set that was used, a table that shows details of the parameter definition and the simulation results. As more than one simulation was performed, the columns for the simulation results are now named run_1 to run_8.
+
+# A simple case study
+## Sensitivity analysis
+### FAST
+In this example we apply the `fast` for sensitivity analysis. The Fourier Amplitude Sensitivity Test (FAST) is a method to perform GSA with few model evaulations. It only requires a few simulations when the number of parameters is low and sharply increases to tenth of thousands for more than 20 parameters. Therefore for our example we select only 7 parameters that are relevant in many model SWAT model applications.
+
+The FAST method requires a specific parameter sampling design. Fortunately, the `fast` package provides a function to sample the model parameters.
+```{r}
+par_names <- c("cn2.hru | change = abschg",
+               "lat_ttime.hru | change = absval", 
+               "surlag.bsn | change = absval",
+               "k.sol | change = pctchg",
+               "awc.sol | change = pctchg",
+               "esco.hru | change = absval",
+               "canmx.hru | change = absval")
+
+
+par_fast <- fast_parameters(minimum = c(-15,   1, 0.1,-50, -50, 0,  0),
+                              maximum = c( 10, 100,  18, 50,  50, 1, 25), 
+                              names = par_names)
+
+```
+
+To perform a FAST analysis for 7 parameters 167 model evaluations are required. We run the SWAT model with the parameter set sampled with `fast` and evaluate the simulations.
+
+
+```{r}
+q_fast <- run_swatplus(project_path = proj_path, 
+                      output = list(q_out = define_output(file = "channel",
+                                             variable = "flo_out",
+                                             unit = 3)),
+                      parameter = par_fast,
+                      n_thread = 4)
+```
 
