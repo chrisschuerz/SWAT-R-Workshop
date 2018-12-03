@@ -105,7 +105,7 @@ q_obs <- load_demo(dataset = "observation")
 ## First SWAT simulations
 After loading the demo project you can already perform your first SWAT simulation. To run SWAT from *R* you can simply use the functions `run_swat2012()` to run a SWAT2012 project or `run_swatplus()` to run a SWAT+ project. We will go though all the parameters these functions provide. The minimum requirement to run simulations in a project is to provide the path to the project and what simulation output the function should return to *R*. Below is a mimimum example to simulate the discharge at the main outlet.
 
-```{r}
+```{r, eval=F}
 q_out <- run_swatplus(proj_path, 
                       output = define_output(file = "channel",
                                              variable = "flo_out",
@@ -135,7 +135,7 @@ par_single <- c("cn2.hru|change = abschg" = -5,
 ```
 
 With this parameter set we can again run our model
-```{r}
+```{r, eval=F}
 q_out <- run_swatplus(proj_path, 
                       output = define_output(file = "channel",
                                              variable = "flo_out",
@@ -144,6 +144,20 @@ q_out <- run_swatplus(proj_path,
 ```
 
 ## Several parameter combinations
-The 
+The definition of multiple parameter combinations works in a similar way. Now we have to define the parameters with a tibble.
+```{r}
+par_set <- tibble("cn2.hru|change = abschg" = runif(8,-15,10),
+                  "alpha.gw|change = absval" = runif(8, 0, 1))
+```
+To run SWAT simulations with many parameter sets the `SWATplusR` package provides the option to run the simulations in parallel. To perform parallel simulations you simply define the number of threads as demonstrated below.
 
+```{r, eval=F}
+q_out <- run_swatplus(proj_path, 
+                      output = define_output(file = "channel",
+                                             variable = "flo_out",
+                                             unit = 3),
+                      parameter = par_set,
+                      n_thread = 4)
+```
+Now instead of only providing a table with the simulations, the function returns by default a list that stores the parameter set that was used, a table that shows details of the parameter definition and the simulation results. As more than one simulation was performed, the columns for the simulation results are now named run_1 to run_8.
 
