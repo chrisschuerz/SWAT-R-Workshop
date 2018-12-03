@@ -73,6 +73,8 @@ install.packages("fast")
 ```{r, message=F}
 library(SWATplusR)
 library(tidyverse)
+library(lubridate)
+library(forcats)
 library(lhs)
 library(fast)
 library(sensitivity)
@@ -162,8 +164,8 @@ q_out <- run_swatplus(project_path = proj_path,
 Now instead of only providing a table with the simulations, the function returns by default a list that stores the parameter set that was used, a table that shows details of the parameter definition and the simulation results. As more than one simulation was performed, the columns for the simulation results are now named run_1 to run_8.
 
 # A simple case study
-## Sensitivity analysis
-### FAST
+## Sensitivity analysis with FAST
+### Sample parameters and perform simulations
 In this example we apply the `fast` for sensitivity analysis. The Fourier Amplitude Sensitivity Test (FAST) is a method to perform GSA with few model evaulations. It only requires a few simulations when the number of parameters is low and sharply increases to tenth of thousands for more than 20 parameters. Therefore for our example we select only 7 parameters that are relevant in many model SWAT model applications.
 
 The FAST method requires a specific parameter sampling design. Fortunately, the `fast` package provides a function to sample the model parameters.
@@ -183,7 +185,7 @@ par_fast <- fast_parameters(minimum = c(-15,   1, 0.1,-50, -50, 0,  0),
 
 ```
 
-To perform a FAST analysis for 7 parameters 167 model evaluations are required. We run the SWAT model with the parameter set sampled with `fast` and evaluate the simulations.
+To perform a FAST analysis for 7 parameters 167 model evaluations are required. We run the SWAT model with the parameter set sampled with `fast` and evaluate the simulations. In our example we define a simulation period from `1993` to `2005` and skip the first three years of simulations for writing the outputs. 
 
 
 ```{r}
@@ -192,6 +194,33 @@ q_fast <- run_swatplus(project_path = proj_path,
                                              variable = "flo_out",
                                              unit = 3)),
                       parameter = par_fast,
+                      start_date = "1993-01-01",
+                      end_date = "2005-12-31",
+                      years_skip = 3,
                       n_thread = 4)
+```
+### Evaluate the simulations
+For this simple example we use the NSE as objective criterion. The NSE function is available from the `hydroGOF` package. To evaualte the simulations we reduce the observation to the same time period.
+```{r}
+q_obs <- filter(q_obs, date >= ymd("1996-01-01"), date <= "2005-12-31")
+
+nse_fast <- q_fast$simulation$q_out %>% 
+  select(-date) %>% 
+  map_dbl(., ~NSE(.x, q_obs$q_out))
+
+sens_fast <- sensitivity(nse_fast, 7)
+```
+
+### Visualize result
+```{r}
+result_fast <- tibble(parameter = q_fast$parameter$definition$par_name,
+                      fast = sens_fast) %>% 
+  mutate(parameter = factor(parameter) %>% fct_reorder(., fast))
+ggplot(data = result_fast) + 
+  geom_bar(aes(x = parameter, y = fast), stat = "identity") + 
+  xlab("Parameter") + 
+  ylab("Sensitivity") + 
+  coord_flip() + 
+  theme_bw()
 ```
 
