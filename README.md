@@ -62,7 +62,7 @@ The real strength of *R* is the large number of packages that are easily accesib
 
 ``` r
 # Install required packages from CRAN
-install.packages(c("devtools", "tidyverse", "lubridate", "lhs", "hydroGOF", "sensitivity", "fast", "sf", "here"))
+install.packages(c("devtools", "tidyverse", "lubridate", "lhs", "hydroGOF", "sensitivity", "fast", "sf", "here", "patchwork"))
 
 # Install the pasta package from my github repository (I use it a lot and will explain why)
 devtools::install_github("chrisschuerz/pasta")
