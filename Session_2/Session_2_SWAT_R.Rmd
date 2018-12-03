@@ -171,17 +171,17 @@ In this example we apply the `fast` for sensitivity analysis. The Fourier Amplit
 The FAST method requires a specific parameter sampling design. Fortunately, the `fast` package provides a function to sample the model parameters.
 ```{r}
 par_names <- c("cn2.hru | change = abschg",
-               "lat_ttime.hru | change = absval", 
-               "surlag.bsn | change = absval",
+               "lat_ttime.hru | change = absval",
+               "lat_len.hru | change = absval",
                "k.sol | change = pctchg",
                "awc.sol | change = pctchg",
                "esco.hru | change = absval",
                "canmx.hru | change = absval")
 
 
-par_fast <- fast_parameters(minimum = c(-15,   1, 0.1,-50, -50, 0,  0),
-                              maximum = c( 10, 100,  18, 50,  50, 1, 25), 
-                              names = par_names)
+par_fast <- fast_parameters(minimum = c(-15,   0, 10, -50, -50, 0,  0),
+                            maximum = c( 10,  10, 75,  50,  50, 1, 25), 
+                            names = par_names)
 
 ```
 
@@ -211,7 +211,7 @@ nse_fast <- q_fast$simulation$q_out %>%
 sens_fast <- sensitivity(nse_fast, 7)
 ```
 
-### Visualize result
+### Visualize the sensitivity analysis result
 ```{r, eval=FALSE}
 result_fast <- tibble(parameter = q_fast$parameter$definition$par_name,
                       fast = sens_fast) %>% 
@@ -221,6 +221,98 @@ ggplot(data = result_fast) +
   xlab("Parameter") + 
   ylab("Sensitivity") + 
   coord_flip() + 
+  theme_bw()
+```
+It is clear from the sensitivity analysis, that the by far most dominant parameter is the lateral travel time *lat_ttime*. Other parameters that are sensitivite are lat_len, K, CN2, and ESCO. In the model calibration we will focus on these four parameters.
+
+### Dotty plots
+Dotty plots can be helpful to show parameter ranges where the model showed a better performance. We can utilize the performed simulations to plot dotty plots for the 7 analyzed parameters. You can use this short code snippet for other applications in future when you think that dotty plots are applicable.
+
+```{r}
+dotty_data <- par_fast %>% 
+  mutate(nse = nse_fast) %>% 
+  gather(key = "parameter", value = "value", -nse)
+
+ggplot(data = dotty_data) + 
+  geom_point(aes(x = value, y = nse)) + 
+  theme_bw() + 
+  ylim(c(-5, 1)) + 
+  facet_wrap(parameter ~ ., scales = "free_x" )
+```
+The dotty plots for our example show that 
+
+## Model calibration
+For demonstration we will perform the model calibration with only a low number of model evaluations (So do not expect very good results :)). 
+We sample the selected influential parameter using Latin Hypercube Sampling available from the `lhs` package. To keep the computation time low, we will only perform 500 simulations. 
+### Parameter sampling
+The dotty plots indicate that good model results can only be achieved with low lat_ttime values. Therefore we will constrain its parameter range in the calibration. All other parameters do not show a very clear pattern. Therefore we will keep their ranges unchanged.
+
+```{r}
+par_bound <- tibble("cn2.hru | change = abschg" = c(-15, 10),
+                    "lat_ttime.hru | change = absval" = c(0, 3),
+                    "lat_len.hru | change = absval" = c(10, 50),
+                    "k.sol | change = pctchg" = c(-50, 50),
+                    "esco.hru | change = absval" = c(0, 1))
+
+lhs_samp <- randomLHS(n = 1000, k = 5) %>% as_tibble(.)
+
+par_cal <- map2_dfc(par_bound, lhs_samp, ~ (.y * (.x[2] - .x[1]) + .x[1]))
+```
+
+
+### Model simulation and evaluation
+```{r, eval=FALSE}
+q_cal <- run_swatplus(project_path = proj_path, 
+                      output = list(q_out = define_output(file = "channel",
+                                             variable = "flo_out",
+                                             unit = 3)),
+                      parameter = par_cal,
+                      start_date = "1993-01-01",
+                      end_date = "2005-12-31",
+                      years_skip = 3,
+                      n_thread = 4)
+```
+
+```{r}
+nse_cal <- q_cal$simulation$q_out %>% 
+  select(-date) %>% 
+  map_dbl(., ~NSE(.x, q_obs$q_out))
+```
+
+
+### Visualization - Dotty plots
+```{r}
+dotty_data <- par_cal %>% 
+  mutate(nse = nse_cal) %>% 
+  gather(key = "parameter", value = "value", -nse)
+
+ggplot(data = dotty_data) + 
+  geom_point(aes(x = value, y = nse)) + 
+  theme_bw() + 
+  ylim(c(-5, 1)) + 
+  facet_wrap(parameter ~ ., scales = "free_x" )
+```
+
+### Visualization - Simulated time series
+
+```{r}
+run_select <- names(nse_cal[nse_cal > -0.2])
+
+cal_select <- q_cal$simulation$q_out %>% 
+  select(one_of(run_select)) %>% 
+  transmute(q_max = pmap_dbl(., max),
+            q_min = pmap_dbl(., min),
+            q_sim = rowMeans(.)) 
+
+cal_plot <- bind_cols(q_obs, cal_select) %>% 
+  gather(key = "variable", value = "discharge", -date, -q_min, - q_max)
+  
+
+ggplot(data = cal_plot) + 
+  geom_ribbon(aes(x = date, ymin = q_min, ymax = q_max), alpha = 0.5) + 
+  geom_line(aes(x = date, y = discharge, col = variable)) + 
+  xlab("Date / yyyy") + 
+  ylab("Discharge / m ^3 s^-1") + 
   theme_bw()
 ```
 
