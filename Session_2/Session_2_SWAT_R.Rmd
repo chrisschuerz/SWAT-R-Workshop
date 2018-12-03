@@ -80,11 +80,13 @@ library(hydroGOF)
 ```
 
 
-# Loading the SWAT demo project
+# Loading the SWAT demo
+
+## Load the project folder
 The `SWATplusR` package provides very simple model setups of a head watershed of the Little River Experimental Watershed (LREW). Model setups can be retrievew for SWAT2012 and for SWAT+. The goal is to provide the demos for all operating systems in the future. At the moment the SWAT2012 demo is available for Windows and Linux and the SWAT+ demo is only available for Windows. For this workshop this means that you can work with SWAT+ if you use Windows as your operating system. Linux users have to work with SWAT2012 at the moment. The provided functionality is however very similar for both models.
 ```{r,eval=FALSE}
 # The path where the SWAT demo project will be written
-demo_path <- "replace:/with/your/path"
+demo_path <- "C:"
 # The SWAT version you want to use
 swat_version <- "plus" #or "2012" on Linux
 # The function writes the demo folder to the defined path and returns the final
@@ -94,6 +96,54 @@ proj_path <- load_demo(dataset = "project",
                        path = demo_path)
 ```
 
+## Load observation data
+The demo contains observation time series data for the main outlet of the demo catchment. Load the table with the observation data and assign it to a variable in your *R* work space.
+```{r}
+q_obs <- load_demo(dataset = "observation")
+```
 
+## First SWAT simulations
+After loading the demo project you can already perform your first SWAT simulation. To run SWAT from *R* you can simply use the functions `run_swat2012()` to run a SWAT2012 project or `run_swatplus()` to run a SWAT+ project. We will go though all the parameters these functions provide. The minimum requirement to run simulations in a project is to provide the path to the project and what simulation output the function should return to *R*. Below is a mimimum example to simulate the discharge at the main outlet.
+
+```{r}
+q_out <- run_swatplus(proj_path, 
+                      output = define_output(file = "channel",
+                                             variable = "flo_out",
+                                             unit = 3))
+```
+
+The function returns the simulation at the catchment outlet as a table with a date column and a column with the simulated discharge.
+
+# Changing parameters in a simulation
+## A single parameter set
+To modify the model parameters in a simulation you simply provide a vector with the parameter values to the `run_swat()` function. A single parameter set can be provided as a vector. To provide an entire set of parameter combinations I recommend to provide them as a tibble. 
+
+For the provided parameter set the naming is very essential and has to follow some rules in order to be interpreted by the function in the correct way. A parameter name can consist of several parts. Some are required, some are optional. The minimum requirement for a parameter name is the actual name in the model an the type of change. Here is an example
+```{r}
+par_name <- "cn2|change = abschg"
+```
+The sytax means that we modify the parameter CN2 and we change it by adding an absolute value. If you want to assign an individual name to the parameter in oyur *R* project you can do this as follows:
+```{r}
+par_name <- "my_name::cn2|change = abschg"
+```
+
+Below we define a single parameter set where we reduce all CN2 values by 5 and set the alpha value to 0.5.
+
+```{r}
+par_single <- c("cn2.hru|change = abschg" = -5,
+                "alpha.gw|change = absval" = 0.5)
+```
+
+With this parameter set we can again run our model
+```{r}
+q_out <- run_swatplus(proj_path, 
+                      output = define_output(file = "channel",
+                                             variable = "flo_out",
+                                             unit = 3),
+                      parameter = par_single)
+```
+
+## Several parameter combinations
+The 
 
 
