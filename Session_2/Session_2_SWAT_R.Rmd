@@ -1,0 +1,85 @@
+---
+output: 
+  pdf_document:
+    toc: true
+    number_sections: true
+    citation_package: natbib
+    highlight: tango
+    keep_tex: false
+    fig_caption: true
+    latex_engine: pdflatex
+    template: svm-latex-ms.tex
+title: "Session 2: SWAT simulation, calibration, and sensitivity analysis in R "
+author:
+- name: "Christoph Schürz"
+  affiliation: "christoph.schuerz@boku.ac.at"
+abstract: "The goal of this second session is that you get familiar with the `SWATplusR` package. After the package installation we will load a demo SWAT project and explore the functionality of the `SWATplusR` package. The essential part of this session will be to learn how to utilize the package functionality and combine it with other `R` packages. In a small case study we will execute the SWAT model with different model parametrizations, extract simulation results, evaluate and visualize the simulation results (using the packages `HydroGOF` and the `tidyverse`), perform a parameter sensitivity analysis (employing packages such as `sensitivity` or `fast`), and perform a first model calibration."
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+geometry: margin=1in
+fontfamily: mathpazo
+fontsize: 11pt
+# bibliography: ~/Dropbox/master.bib
+biblio-style: apsr
+---
+
+\newpage
+# Package installation
+## Package dependencies 
+Below you find a list of packages that are required to install `SWATplusR`. Among these packages  you find tools that can be useful in your daily routine when analyzing data in `R` (e.g. most of the packages included in the `tidyverse`). Please install all the packages by executing the following lines of code.
+
+```{r, eval=FALSE}
+install.packages(c("doSNOW", "foreach", "RSQLite", "tidyverse"))
+```
+
+## SWATplusR
+You can install the `SWATplusR` package from my *github* repository (set to public for the course). To install from repositories with ease you can use the package `devtools`
+```{r, eval=FALSE}
+install.packages("devtools")
+
+# use the function install_github from the devtools package to install
+devtools::install_github("chrisschuerz/SWATplusR")
+```
+
+## Additional packages
+To perform our analyses we require further functionality provided by other `R` packages. Here I provide a list of packages you have to install. I briefly outline what each of these packages does for you.
+
+### `lhs`
+This package provides different methods to draw Latin Hypercube Samples. We will sample the SWAT model parameters in the calibration example using latin hypercube sampling.
+```{r, eval=FALSE}
+install.packages("lhs")
+```
+
+### `hydroGOF`
+This package provides a comprehensive library of objective criteria used in hydrology (e.g. NSE, KGE, pbias, etc.) to evaluate time series of simulated discharge etc.
+```{r, eval= FALSE}
+install.packages("hydroGOF")
+```
+
+### `sensitivity`
+`sensitivity` provides a large variety of methods to perform Global Sensitivity Analysis (GSA, e.g. Sobol or Delsa). 
+```{r, eval=FALSE}
+install.packages("sensitivity")
+```
+
+### fast
+The Fourier Amplitude Sensitivity Test (FAST) is a method to perform GSA with few model evaulations. This package impelements this method in `R`.
+```{r, eval=FALSE}
+install.packages("fast")
+```
+
+\newpage
+
+# Loading the SWAT demo project
+The `SWATplusR` package provides very simple model setups of a head watershed of the Little River Experimental Watershed (LREW). Model setups can be retrievew for SWAT2012 and for SWAT+. The goal is to provide the demos for all operating systems in the future. At the moment the SWAT2012 demo is available for Windows and Linux and the SWAT+ demo is only available for Windows. For this workshop this means that you can work with SWAT+ if you use Windows as your operating system. Linux users have to work with SWAT2012 at the moment. The provided functionality is however very similar for both models.
+```{r,eval=FALSE}
+# The path where the SWAT demo project will be written
+demo_path <- "replace:/with/your/path"
+# The SWAT version you want to use
+swat_version <- "SWATplus" #or "SWAT2012" on Linux
+# The function writes the demo folder to the defined path and returns the final
+# path of the project folder in R
+project_path <- load_demo(type = swat_version, path = demo_path)
+```
+
+
+
