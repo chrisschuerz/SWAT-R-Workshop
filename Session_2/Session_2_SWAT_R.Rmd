@@ -69,17 +69,31 @@ install.packages("fast")
 
 \newpage
 
+# Load required R packages
+```{r, message=F}
+library(SWATplusR)
+library(tidyverse)
+library(lhs)
+library(fast)
+library(sensitivity)
+library(hydroGOF)
+```
+
+
 # Loading the SWAT demo project
 The `SWATplusR` package provides very simple model setups of a head watershed of the Little River Experimental Watershed (LREW). Model setups can be retrievew for SWAT2012 and for SWAT+. The goal is to provide the demos for all operating systems in the future. At the moment the SWAT2012 demo is available for Windows and Linux and the SWAT+ demo is only available for Windows. For this workshop this means that you can work with SWAT+ if you use Windows as your operating system. Linux users have to work with SWAT2012 at the moment. The provided functionality is however very similar for both models.
 ```{r,eval=FALSE}
 # The path where the SWAT demo project will be written
 demo_path <- "replace:/with/your/path"
 # The SWAT version you want to use
-swat_version <- "SWATplus" #or "SWAT2012" on Linux
+swat_version <- "plus" #or "2012" on Linux
 # The function writes the demo folder to the defined path and returns the final
 # path of the project folder in R
-project_path <- load_demo(type = swat_version, path = demo_path)
+proj_path <- load_demo(dataset = "project", 
+                       swat_version = swat_version, 
+                       path = demo_path)
 ```
+
 
 
 
