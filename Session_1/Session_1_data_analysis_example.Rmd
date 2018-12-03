@@ -27,6 +27,7 @@ biblio-style: apsr
 # Required packages
 ```{r, message=FALSE}
 library(tidyverse)
+library(lubridate)
 library(pasta)
 library(here)
 ```
@@ -89,18 +90,203 @@ ars_clim
 ## Saving data
 There are many ways and data formates to save your data. If I do not intend to use the data with any other software (e.g. Excel) or share the dataset with colleagues, my preferred way to store data is as ***.rds** files (short for R Data Single). The advantage of this format is, that it holds exactly one variable that I can assign to a specific variable name when loading it. This makes code easier to read. 
 
-If the data should be accessible by other software (and the data is a spreadsheet) I suggest to save in the ***.csv** format. This is a format that can be interpreted by a wide range of software (in contrast to ***.xslx** and others). 
+If the data should be accessible by other software (and the data is a spreadsheet) I suggest to save in the **.csv** format. This is a format that can be interpreted by a wide range of software (in contrast to ***.xslx** and others). 
 
-Here I show you different ways to save your data. We will briefly talk about the pros and cons of all the methods.
+Here I show you different ways to save your data. We will briefly talk about the pros and cons of all the methods. We will come back to saving data at a later point.
 ```{r}
 # Saving as a single data object
-saveRDS(ars_clim, here("Session_1/ars_clim.rds"))
+saveRDS(object = ars_clim, file = here("Session_1/ars_clim.rds"))
 
 # Saving the data with the default save command
+# you will also frequently see *.RData as a file suffix. .rda is just 
+# an abbreviation for that 
 save(ars_clim, file = here("Session_1/ars_clim.rda"))
 
 # Writing the table in a csv file
-write.csv(ars_clim, file = here("Session_1/ars_clim.csv"))
+## Using the readr package
+write_csv(x = ars_clim, path = here("Session_1/ars_clim1.csv"))
+## Using the base R funciton
+write.csv(x = ars_clim, file = here("Session_1/ars_clim2.csv"))
 
+```
+
+# First analysis and tidying of the data
+## Loading the data
+The syntax for loading your data is equivalent to saving the data. The main difference is that instead of telling the function which variable you want to save/write, you assign the data you load to a variable.
+Here the difference between ***.rds** and ***.rda** becomes clear. When loading an RData file you cannot assign it to a variable, but the loaded data keeps the name it had when saving. The ***.rds** file must be assigned to a variable instead (same as the ***.csv**).
+To follow these lines of code download the files (or the entire *R* project) from the course github repository.
+
+```{r, message=FALSE}
+# Loading the rds file and assigning it to a new variable
+ars_clim_rds <- readRDS(file = here("Session_1/ars_clim.rds"))
+
+# Loading the content of the rda file into your working space
+load(file = here("Session_1/ars_clim.rda"))
+
+# Read a csv file into your working space
+# Using the readr package
+ars_clim_csv1 <- read_csv(file = here("Session_1/ars_clim1.csv"))
+#Using the base R function
+ars_clim_csv2 <- read.csv(file = here("Session_1/ars_clim2.csv"))
+```
+
+
+## Exploring the data
+I always suggest to do some checks on the data before using it. Below you find some ways to perform initial checks. A very nice *R* package to explore your data is the `DataExplorer`. I usually also check summary statistics of the data. These provide a good first insight for your data.
+
+```{r}
+# Using the DataExplorer (I assume it is not installed on your computer)
+# If you want to use it install it as follows (without the '#'):
+# install.packages("DataExplorer")
+# Exploring the data
+# DataExplorer::create_report(ars_clim)
+
+# Summary statistics
+summary(ars_clim)
+```
+
+You can see that all columns have almost the same number of `NA` values. The can indicate that there was an issue with reading the data. In this case I think the reason was that one of the tables from the web page had a lot of blank lines at the end. The `read_table()` function interpreted these as rows with no values. We will remove these lines from our data later. 
+
+Most of the variables seem to have plausible values according to the summary statistics. Only the variable `sr_tot` shows large negative values of `-99999.0`. Typically such values are used as `NoData` values. In the following step we will change these values to `NA`. The hours are provided in intervals of hundreds (probably to give the option to add minutes). To use the variable `hour` below, we have to devide it by `100`.
+
+## Tidying up the data, first mutations of the data
+### Working with dates
+The date in our data is provided in three columns (year, julian day, and hour). In the following we want to create one date vector from these columns. Working with dates can cause a lot of trouble in *R* (e.g. with time zones, daylight saving time, leap years). Further, there are many ways to work with dates in *R*. I prefer to work with the `lubridate` package which is also from the `tidyverse`. As with the other `tidyverse` packages it has a very intuitive syntax. Unfortunately I cannot find a direct function to create dates from julian days. Therefore, I wrote short functions to do the trick. Whenever you stumble upon julian day format and you want to convert to date format you can use these functions:
+
+```{r}
+# Function to convert from year and julian day to a date
+yj <- function(y, jdn) {
+   date <- ymd(y%//%"01"%//%"01")
+   yday(date) <- jdn
+   return(date)
+ }
+
+# Function to convert from year, julian day, and hour to a date
+ yjh <- function(y, jdn, h) {
+   date <- ymd_h(y%//%"01"%//%"01"%&&%h)
+   yday(date) <- jdn
+   return(date)
+ }
+```
+
+Now we can use these functions to calculate dates from year, julian day and hour. To calculate new variables the `dplyr` package provides the function `mutate`. 
+
+```{r}
+ars_clim <- mutate(ars_clim, date = yjh(year, day, hour/100))
+```
+
+### Cleanig the data, selecting variables
+We identified some issues with the data in our data exploration. In the following we remove the rows that hold only `NA` values, change the `NoData` value for the solar radiation, and select the columns we are interested in. 
+
+Here you learn a bunch of new functions. First you see here a more 'modern' way of *R* programming using the pipe operator `%>%`. It litterally pipes the result from the previous function to the next function and puts it at the position of the `.` (e.g. `function(a, ., b)`). This might be a little unconventional to read in the beginning. It makes the code however very tidy and easy to read when used to it.
+
+To filter specific rows from a table you can use the function `filter()`. It filters the rows where a logical expression is true. The selection of columns is done with the funcion `select()`. 
+
+```{r}
+ars_clim <- ars_clim %>% #This is the pipe operator
+  filter(., !is.na(date)) %>% 
+  mutate(., sr_tot = ifelse(sr_tot < 0, NA, sr_tot)) %>% 
+  select(., date, t_air_ave, pr_tot, t_sol_ave)
+
+ars_clim
+```
+
+# Visualizing daily mean, minimum, and maximum temperatures, and precipitation
+## Aggregation of the data to daily values
+When aggregating temporal data I always prefer the work around to calculate the year, month, day, etc. values from the date, group the data by these values and aggregate the observations. I assume there are more elegant ways. This is simply my routine. The code example below demonstrates how to aggregate data by specific time steps. The grouping variables can however be any other variables as well. 
+
+```{r}
+# If the data is piped to the first position in a function you can omit the "." 
+ars_clim_day <- ars_clim %>% 
+  mutate(year = year(date),     # Using lubridates year to calculate the year
+         mon  = month(date),    # You got the idea... :)
+         day  = day(date)) %>%  # Same here
+  group_by(year, mon, day) %>%  
+  summarize(pr_sum = sum(pr_tot),         # Calculate the daily precip sums
+            t_air_mean = mean(t_air_ave), # Calculate the daily mean air temp
+            t_air_max  = max(t_air_ave),  # Again I hope you got the idea...
+            t_air_min  = min(t_air_ave),
+            t_sol_mean = mean(t_sol_ave),
+            t_sol_max  = max(t_sol_ave),
+            t_sol_min  = min(t_sol_ave)) %>% 
+  ungroup(.) %>%  # After the aggregation I always ungroup to avoid unwanted 
+                  # behavior in following steps
+  mutate(date = ymd(year%-%mon%-%day)) %>%  # Get the date from year, month, day
+  select(- year, - mon, - day)
+ars_clim_day
+```
+## Visualization of the data
+Again, there are many ways for visualization in *R*. My preferred way is to use the `ggplot2` package, because of its great flexibility and intuitive syntax. We will talk about the characteristics of `ggplot2` in this course. An excellent overview to use it in the future is provided by RStudio's [data visualization cheatsheet](https://www.rstudio.com/resources/cheatsheets/#ggplot2) (See all the other fantastic cheatsheets too!).
+It is essential to learn the basic concept of ggplot. The major benefit of ggplot is, when you got the concept you can apply it more or less to all of your visualization tasks. The code below applies ggplot to our climate data.
+
+## Prepare the precipitation data
+```{r}
+pr_data <- select(ars_clim_day, date, pr_sum) 
+```
+
+### Visual check of the precipitation data
+```{r}
+qplot(date, pr_sum, data = pr_data, geom = "line")
+```
+
+
+## Prepare the temperature data
+```{r}
+# Prepare the air tempeartures
+t_air <- ars_clim_day %>% 
+  select(date, starts_with("t_air")) %>%  # That is why good naming is important
+  set_names(c("date", "t_mean", "t_max", "t_min")) %>% 
+  mutate(variable = "Air temparature")
+
+# Prepare the soil tempeartures
+t_sol <- ars_clim_day %>% 
+  select(date, starts_with("t_sol")) %>%  
+  set_names(c("date", "t_mean", "t_max", "t_min")) %>% 
+  mutate(variable = "Soil temparature")
+
+# Combine the temperature data to a combined table
+t_data <- bind_rows(t_air, t_sol)
+
+```
+
+### Visual check of the temperature data
+```{r}
+qplot(date, t_mean, data = t_data, col = variable, geom = "line")
+```
+
+## Creating the final plot
+### Preparing the temperature plot
+```{r}
+t_plot <- ggplot(data = t_data) + 
+  geom_ribbon(aes(x = date, ymin = t_min, ymax = t_max), alpha = 0.5) + 
+  geom_line(aes(x = date, y = t_mean)) + 
+  facet_wrap(variable ~ ., ncol = 1) + 
+  xlab("Date / yyyy") + 
+  ylab("Temperature / degC") + 
+  theme_bw()
+```
+
+### Preparing the precipitation plot
+```{r}
+pr_data <- mutate(pr_data, pr_sum = ifelse(pr_sum == 0, NA, pr_sum))
+
+pr_plot <- ggplot(data = pr_data) + 
+  geom_bar(aes(x = date, y = pr_sum), col = "royalblue4", stat = "identity") + 
+  xlab("Date / yyyy") + 
+  ylab("Precipitation / mm") + 
+  theme_bw()
+```
+
+### Combining both plots
+A great way to arrange ggplots is provided by the `patchwork` package. You install it from the following github repository:
+```{r, eval = F}
+devtools::install_github("thomasp85/patchwork")
+```
+
+Combining plots with `patchwork` is very intuitive. You simply **add** them together.
+```{r, warning=FALSE, message=FALSE}
+library(patchwork)
+
+pr_plot + t_plot + plot_layout(ncol = 1, heights = c(1, 2))
 ```
 
