@@ -188,7 +188,7 @@ par_fast <- fast_parameters(minimum = c(-15,   1, 0.1,-50, -50, 0,  0),
 To perform a FAST analysis for 7 parameters 167 model evaluations are required. We run the SWAT model with the parameter set sampled with `fast` and evaluate the simulations. In our example we define a simulation period from `1993` to `2005` and skip the first three years of simulations for writing the outputs. 
 
 
-```{r}
+```{r, eval=FALSE}
 q_fast <- run_swatplus(project_path = proj_path, 
                       output = list(q_out = define_output(file = "channel",
                                              variable = "flo_out",
@@ -201,7 +201,7 @@ q_fast <- run_swatplus(project_path = proj_path,
 ```
 ### Evaluate the simulations
 For this simple example we use the NSE as objective criterion. The NSE function is available from the `hydroGOF` package. To evaualte the simulations we reduce the observation to the same time period.
-```{r}
+```{r, eval=FALSE}
 q_obs <- filter(q_obs, date >= ymd("1996-01-01"), date <= "2005-12-31")
 
 nse_fast <- q_fast$simulation$q_out %>% 
@@ -212,7 +212,7 @@ sens_fast <- sensitivity(nse_fast, 7)
 ```
 
 ### Visualize result
-```{r}
+```{r, eval=FALSE}
 result_fast <- tibble(parameter = q_fast$parameter$definition$par_name,
                       fast = sens_fast) %>% 
   mutate(parameter = factor(parameter) %>% fct_reorder(., fast))
