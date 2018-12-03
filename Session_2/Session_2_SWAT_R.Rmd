@@ -100,7 +100,7 @@ proj_path <- load_demo(dataset = "project",
 
 ## Load observation data
 The demo contains observation time series data for the main outlet of the demo catchment. Load the table with the observation data and assign it to a variable in your *R* work space.
-```{r}
+```{r, eval=FALSE}
 q_obs <- load_demo(dataset = "observation")
 ```
 
@@ -121,17 +121,17 @@ The function returns the simulation at the catchment outlet as a table with a da
 To modify the model parameters in a simulation you simply provide a vector with the parameter values to the `run_swat()` function. A single parameter set can be provided as a vector. To provide an entire set of parameter combinations I recommend to provide them as a tibble. 
 
 For the provided parameter set the naming is very essential and has to follow some rules in order to be interpreted by the function in the correct way. A parameter name can consist of several parts. Some are required, some are optional. The minimum requirement for a parameter name is the actual name in the model an the type of change. Here is an example
-```{r}
+```{r, eval=FALSE}
 par_name <- "cn2|change = abschg"
 ```
 The sytax means that we modify the parameter CN2 and we change it by adding an absolute value. If you want to assign an individual name to the parameter in oyur *R* project you can do this as follows:
-```{r}
+```{r, eval=FALSE}
 par_name <- "my_name::cn2|change = abschg"
 ```
 
 Below we define a single parameter set where we reduce all CN2 values by 5 and set the alpha value to 0.5.
 
-```{r}
+```{r, eval=FALSE}
 par_single <- c("cn2.hru|change = abschg" = -5,
                 "alpha.gw|change = absval" = 0.5)
 ```
@@ -147,7 +147,7 @@ q_out <- run_swatplus(project_path = proj_path,
 
 ## Several parameter combinations
 The definition of multiple parameter combinations works in a similar way. Now we have to define the parameters with a tibble.
-```{r}
+```{r, eval=FALSE}
 par_set <- tibble("cn2.hru|change = abschg" = runif(8,-15,10),
                   "alpha.gw|change = absval" = runif(8, 0, 1))
 ```
@@ -169,7 +169,7 @@ Now instead of only providing a table with the simulations, the function returns
 In this example we apply the `fast` for sensitivity analysis. The Fourier Amplitude Sensitivity Test (FAST) is a method to perform GSA with few model evaulations. It only requires a few simulations when the number of parameters is low and sharply increases to tenth of thousands for more than 20 parameters. Therefore for our example we select only 7 parameters that are relevant in many model SWAT model applications.
 
 The FAST method requires a specific parameter sampling design. Fortunately, the `fast` package provides a function to sample the model parameters.
-```{r}
+```{r, eval=FALSE}
 par_names <- c("cn2.hru | change = abschg",
                "lat_ttime.hru | change = absval",
                "lat_len.hru | change = absval",
@@ -228,7 +228,7 @@ It is clear from the sensitivity analysis, that the by far most dominant paramet
 ### Dotty plots
 Dotty plots can be helpful to show parameter ranges where the model showed a better performance. We can utilize the performed simulations to plot dotty plots for the 7 analyzed parameters. You can use this short code snippet for other applications in future when you think that dotty plots are applicable.
 
-```{r}
+```{r, eval=FALSE}
 dotty_data <- par_fast %>% 
   mutate(nse = nse_fast) %>% 
   gather(key = "parameter", value = "value", -nse)
@@ -247,14 +247,14 @@ We sample the selected influential parameter using Latin Hypercube Sampling avai
 ### Parameter sampling
 The dotty plots indicate that good model results can only be achieved with low lat_ttime values. Therefore we will constrain its parameter range in the calibration. All other parameters do not show a very clear pattern. Therefore we will keep their ranges unchanged.
 
-```{r}
+```{r, eval=FALSE}
 par_bound <- tibble("cn2.hru | change = abschg" = c(-15, 10),
                     "lat_ttime.hru | change = absval" = c(0, 3),
                     "lat_len.hru | change = absval" = c(10, 50),
                     "k.sol | change = pctchg" = c(-50, 50),
                     "esco.hru | change = absval" = c(0, 1))
 
-lhs_samp <- randomLHS(n = 1000, k = 5) %>% as_tibble(.)
+lhs_samp <- randomLHS(n = 500, k = 5) %>% as_tibble(.)
 
 par_cal <- map2_dfc(par_bound, lhs_samp, ~ (.y * (.x[2] - .x[1]) + .x[1]))
 ```
@@ -273,7 +273,7 @@ q_cal <- run_swatplus(project_path = proj_path,
                       n_thread = 4)
 ```
 
-```{r}
+```{r, eval=FALSE}
 nse_cal <- q_cal$simulation$q_out %>% 
   select(-date) %>% 
   map_dbl(., ~NSE(.x, q_obs$q_out))
@@ -281,7 +281,7 @@ nse_cal <- q_cal$simulation$q_out %>%
 
 
 ### Visualization - Dotty plots
-```{r}
+```{r, eval=FALSE}
 dotty_data <- par_cal %>% 
   mutate(nse = nse_cal) %>% 
   gather(key = "parameter", value = "value", -nse)
@@ -295,7 +295,7 @@ ggplot(data = dotty_data) +
 
 ### Visualization - Simulated time series
 
-```{r}
+```{r, eval=FALSE}
 run_select <- names(nse_cal[nse_cal > -0.2])
 
 cal_select <- q_cal$simulation$q_out %>% 
