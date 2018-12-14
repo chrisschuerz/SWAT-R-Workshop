@@ -37,6 +37,7 @@ You can install the `SWATplusR` package from my *github* repository (set to publ
 install.packages("devtools")
 
 # use the function install_github from the devtools package to install
+# The package is still under development and the installation is deactivated currently. Please contact me if you are interested.
 devtools::install_github("chrisschuerz/SWATplusR")
 ```
 
