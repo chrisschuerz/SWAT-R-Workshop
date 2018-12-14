@@ -76,7 +76,7 @@ If *R* or any of the required packages are allready installed on your computer, 
 The `SWATplusR` package is not yet available from CRAN. It is however available from one of my github repositories. The *R* package `devtools` provides an easy way to install an *R* package directly from github. As it is still under development, I try at the moment to avoid to leave it out in the open, accessible by everybody. In the future it will be freely accessible of course. For the workshop however, you can install the package by running the following line of code
 
 ``` r
-devtools::install_github("chrisschuerz/SWATplusR", auth_token = "e10028d297e76e4667342fc4a592baa35e198519")
+devtools::install_github("chrisschuerz/SWATplusR") # Currently not available. Please contact me.
 ```
 
 ### Troubleshooting
