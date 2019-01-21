@@ -80,6 +80,7 @@ library(lhs)
 library(fast)
 library(sensitivity)
 library(hydroGOF)
+library(pasta)
 ```
 
 
@@ -101,8 +102,9 @@ proj_path <- load_demo(dataset = "project",
 
 ## Load observation data
 The demo contains observation time series data for the main outlet of the demo catchment. Load the table with the observation data and assign it to a variable in your *R* work space.
-```{r, eval=FALSE}
-q_obs <- load_demo(dataset = "observation")
+```{r}
+q_obs <- load_demo(dataset = "observation") 
+  mutate(q_out = 8640*q_out)
 ```
 
 ## First SWAT simulations
@@ -110,9 +112,13 @@ After loading the demo project you can already perform your first SWAT simulatio
 
 ```{r, eval=F}
 q_out <- run_swatplus(project_path = proj_path, 
-                      output = define_output(file = "channel",
+                      output = list(
+                        flow = define_output(file = "channel",
                                              variable = "flo_out",
-                                             unit = 3))
+                                             unit = c(1, 3))),
+                        et   = define_output(file = "basin_wb",
+                                             variable = "et",
+                                             unit = 1)), keep_folder = T)
 ```
 
 The function returns the simulation at the catchment outlet as a table with a date column and a column with the simulated discharge.
@@ -126,7 +132,7 @@ For the provided parameter set the naming is very essential and has to follow so
 par_name <- "cn2|change = abschg"
 ```
 The sytax means that we modify the parameter CN2 and we change it by adding an absolute value. If you want to assign an individual name to the parameter in oyur *R* project you can do this as follows:
-```{r, eval=FALSE}
+```{r}
 par_name <- "my_name::cn2|change = abschg"
 ```
 
@@ -148,7 +154,7 @@ q_out <- run_swatplus(project_path = proj_path,
 
 ## Several parameter combinations
 The definition of multiple parameter combinations works in a similar way. Now we have to define the parameters with a tibble.
-```{r, eval=FALSE}
+```{r}
 par_set <- tibble("cn2.hru|change = abschg" = runif(8,-15,10),
                   "alpha.gw|change = absval" = runif(8, 0, 1))
 ```
@@ -181,7 +187,7 @@ par_names <- c("cn2.hru | change = abschg",
 
 
 par_fast <- fast_parameters(minimum = c(-15,   0, 10, -50, -50, 0,  0),
-                            maximum = c( 10,  10, 75,  50,  50, 1, 25), 
+                            maximum = c( 10,  50, 75,  50,  50, 1, 15), 
                             names = par_names)
 
 ```
@@ -207,7 +213,7 @@ q_obs <- filter(q_obs, date >= ymd("1996-01-01"), date <= "2005-12-31")
 
 nse_fast <- q_fast$simulation$q_out %>% 
   select(-date) %>% 
-  map_dbl(., ~NSE(.x, q_obs$q_out))
+  map_dbl(., ~ NSE(.x, q_obs$q_out))
 
 sens_fast <- sensitivity(nse_fast, 7)
 ```
@@ -237,7 +243,7 @@ dotty_data <- par_fast %>%
 ggplot(data = dotty_data) + 
   geom_point(aes(x = value, y = nse)) + 
   theme_bw() + 
-  ylim(c(-5, 1)) + 
+  ylim(c(-10, 1)) + 
   facet_wrap(parameter ~ ., scales = "free_x" )
 ```
 The dotty plots for our example show that 
@@ -255,7 +261,7 @@ par_bound <- tibble("cn2.hru | change = abschg" = c(-15, 10),
                     "k.sol | change = pctchg" = c(-50, 50),
                     "esco.hru | change = absval" = c(0, 1))
 
-lhs_samp <- randomLHS(n = 500, k = 5) %>% as_tibble(.)
+lhs_samp <- randomLHS(n = 1000, k = 5) %>% as_tibble(.)
 
 par_cal <- map2_dfc(par_bound, lhs_samp, ~ (.y * (.x[2] - .x[1]) + .x[1]))
 ```
@@ -310,7 +316,7 @@ cal_plot <- bind_cols(q_obs, cal_select) %>%
   
 
 ggplot(data = cal_plot) + 
-  geom_ribbon(aes(x = date, ymin = q_min, ymax = q_max), alpha = 0.5) + 
+  geom_ribbon(aes(x = date, ymin = q_min, ymax = q_max), alpha = 0.8) + 
   geom_line(aes(x = date, y = discharge, col = variable)) + 
   xlab("Date / yyyy") + 
   ylab("Discharge / m ^3 s^-1") + 
