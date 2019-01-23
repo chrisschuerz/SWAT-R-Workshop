@@ -98,13 +98,14 @@ swat_version <- "plus" #or "2012" on Linux
 proj_path <- load_demo(dataset = "project", 
                        swat_version = swat_version, 
                        path = demo_path)
+
+proj_path <- "C:/swatplus_demo"
 ```
 
 ## Load observation data
 The demo contains observation time series data for the main outlet of the demo catchment. Load the table with the observation data and assign it to a variable in your *R* work space.
 ```{r}
-q_obs <- load_demo(dataset = "observation") 
-  mutate(q_out = 8640*q_out)
+q_obs <- load_demo(dataset = "observation")
 ```
 
 ## First SWAT simulations
@@ -115,10 +116,10 @@ q_out <- run_swatplus(project_path = proj_path,
                       output = list(
                         flow = define_output(file = "channel",
                                              variable = "flo_out",
-                                             unit = c(1, 3))),
+                                             unit = c(1, 3)),
                         et   = define_output(file = "basin_wb",
                                              variable = "et",
-                                             unit = 1)), keep_folder = T)
+                                             unit = 1)))
 ```
 
 The function returns the simulation at the catchment outlet as a table with a date column and a column with the simulated discharge.
@@ -149,7 +150,7 @@ q_out <- run_swatplus(project_path = proj_path,
                       output = define_output(file = "channel",
                                              variable = "flo_out",
                                              unit = 3),
-                      parameter = par_single)
+                      parameter = par_single, keep_folder = T)
 ```
 
 ## Several parameter combinations
@@ -205,14 +206,18 @@ q_fast <- run_swatplus(project_path = proj_path,
                       end_date = "2005-12-31",
                       years_skip = 3,
                       n_thread = 4)
+
+q_out <- q_fast$simulation$q_out %>% 
+  select(starts_with("run_")) %>% 
+  mutate_all(funs(./8.64))
+
 ```
 ### Evaluate the simulations
 For this simple example we use the NSE as objective criterion. The NSE function is available from the `hydroGOF` package. To evaualte the simulations we reduce the observation to the same time period.
 ```{r, eval=FALSE}
 q_obs <- filter(q_obs, date >= ymd("1996-01-01"), date <= "2005-12-31")
 
-nse_fast <- q_fast$simulation$q_out %>% 
-  select(-date) %>% 
+nse_fast <- q_out %>% 
   map_dbl(., ~ NSE(.x, q_obs$q_out))
 
 sens_fast <- sensitivity(nse_fast, 7)
@@ -261,7 +266,7 @@ par_bound <- tibble("cn2.hru | change = abschg" = c(-15, 10),
                     "k.sol | change = pctchg" = c(-50, 50),
                     "esco.hru | change = absval" = c(0, 1))
 
-lhs_samp <- randomLHS(n = 1000, k = 5) %>% as_tibble(.)
+lhs_samp <- randomLHS(n = 5000, k = 5) %>% as_tibble(.)
 
 par_cal <- map2_dfc(par_bound, lhs_samp, ~ (.y * (.x[2] - .x[1]) + .x[1]))
 ```
@@ -281,6 +286,14 @@ q_cal <- run_swatplus(project_path = proj_path,
 ```
 
 ```{r, eval=FALSE}
+q_out <- q_cal$simulation$q_out %>% 
+  select(starts_with("run_")) %>% 
+  mutate_all(funs(./8.64))
+
+nse_cal <- q_out %>% 
+  map_dbl(., ~ NSE(.x, q_obs$q_out))
+
+
 nse_cal <- q_cal$simulation$q_out %>% 
   select(-date) %>% 
   map_dbl(., ~NSE(.x, q_obs$q_out))
